@@ -15,7 +15,7 @@ const AddExpenseForm = ({ onAddExpense }) => {
     <div>
         <EmojiPickerPopup
         icon={expense.icon}
-        onSelect={(selectedIcon) => handleChange("icon", selectedIcon)}
+        onSelect={(emoji) => handleChange("icon", emoji.emoji)}
       />
 
       <Input
