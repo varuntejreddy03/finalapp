@@ -33,7 +33,11 @@ const Home = () => {
     try {
       const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_DATA);
       console.log('Dashboard API Response:', response.data);
-      setDashboardData(response.data?.data || response.data);
+      
+      // Handle different API response structures
+      const data = response.data?.data || response.data;
+      console.log('Processed dashboard data:', data);
+      setDashboardData(data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       // Set empty data structure to prevent crashes
@@ -43,7 +47,9 @@ const Home = () => {
         totalExpense: 0,
         recentTransactions: [],
         last30DaysExpense: { transactions: [] },
-        last60DaysIncome: { transactions: [] }
+        last60DaysIncome: { transactions: [] },
+        recentIncome: [],
+        recentExpenses: []
       });
     } finally {
       setLoading(false);
@@ -96,23 +102,24 @@ const Home = () => {
           />
 
           <ExpenseTransactions
-            transactions={dashboardData?.last30DaysExpense?.transactions || []}
+            transactions={dashboardData?.last30DaysExpense?.transactions || dashboardData?.recentExpenses || []}
             onSeeMore={() => navigate("/expense")}
           />
 
           <Last30DaysExpense
-            data={dashboardData?.last30DaysExpense?.transactions || []}
+            data={dashboardData?.last30DaysExpense?.transactions || dashboardData?.recentExpenses || []}
           />
 
           <RecentIncomeWithChart
             data={
-              dashboardData?.last60DaysIncome?.transactions?.slice(0, 4) || []
+              dashboardData?.last60DaysIncome?.transactions?.slice(0, 4) || 
+              dashboardData?.recentIncome?.slice(0, 4) || []
             }
             totalIncome={dashboardData?.totalIncome || 0}
           />
 
           <RecentIncome
-            transactions={dashboardData?.last60DaysIncome?.transactions || []}
+            transactions={dashboardData?.last60DaysIncome?.transactions || dashboardData?.recentIncome || []}
             onSeeMore={() => navigate("/income")}
           />
         </div>

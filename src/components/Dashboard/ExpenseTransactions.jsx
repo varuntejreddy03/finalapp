@@ -4,6 +4,11 @@ import TransactionInfoCard from '../Cards/TransactionInfoCard';
 import moment from 'moment';
 
 const ExpenseTransactions = ({ transactions, onSeeMore }) => {
+    console.log('ExpenseTransactions received transactions:', transactions);
+    
+    // Ensure transactions is an array
+    const expenseTransactions = Array.isArray(transactions) ? transactions : [];
+    
     return (
         <div className="card">
             <div className="flex items-center justify-between">
@@ -15,8 +20,8 @@ const ExpenseTransactions = ({ transactions, onSeeMore }) => {
             </div>
 
             <div className="mt-6">
-                {transactions && transactions.length > 0 ? (
-                    transactions.slice(0, 4).map((expense) => (
+                {expenseTransactions.length > 0 ? (
+                    expenseTransactions.slice(0, 4).map((expense) => (
                         <TransactionInfoCard
                             key={expense._id}
                             title={expense.category}
