@@ -32,13 +32,16 @@ const AllTransactions = () => {
         axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSES)
       ]);
 
-      const incomeData = (incomeResponse.data.incomes || []).map(item => ({
+      console.log('Income Response:', incomeResponse.data);
+      console.log('Expense Response:', expenseResponse.data);
+
+      const incomeData = (incomeResponse.data?.incomes || incomeResponse.data?.data || incomeResponse.data || []).map(item => ({
         ...item,
         type: 'income',
         title: item.source
       }));
 
-      const expenseData = (expenseResponse.data.expenses || []).map(item => ({
+      const expenseData = (expenseResponse.data?.expenses || expenseResponse.data?.data || expenseResponse.data || []).map(item => ({
         ...item,
         type: 'expense',
         title: item.category
@@ -52,6 +55,8 @@ const AllTransactions = () => {
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast.error('Failed to load transactions');
+      setTransactions([]);
+      setFilteredTransactions([]);
     } finally {
       setLoading(false);
     }

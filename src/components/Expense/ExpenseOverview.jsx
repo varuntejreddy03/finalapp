@@ -11,6 +11,7 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
     const [totalExpense, setTotalExpense] = useState(0);
 
     useEffect(() => {
+        console.log('ExpenseOverview transactions:', transactions);
         const result = prepareExpenseLineChartData(transactions);
         setChartData(result);
         
@@ -19,7 +20,12 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
         setWeeklyData(weeklyResult);
         
         // Calculate total expense
-        const total = transactions?.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0) || 0;
+        const total = Array.isArray(transactions) 
+            ? transactions.reduce((sum, transaction) => {
+                const amount = Number(transaction?.amount) || 0;
+                return sum + amount;
+            }, 0)
+            : 0;
         setTotalExpense(total);
 
         return () => { };

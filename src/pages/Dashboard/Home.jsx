@@ -32,9 +32,19 @@ const Home = () => {
 
     try {
       const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_DATA);
-      setDashboardData(response.data);
+      console.log('Dashboard API Response:', response.data);
+      setDashboardData(response.data?.data || response.data);
     } catch (error) {
-      console.log("Something went wrong. Please try again later.", error);
+      console.error("Failed to fetch dashboard data:", error);
+      // Set empty data structure to prevent crashes
+      setDashboardData({
+        totalBalance: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        recentTransactions: [],
+        last30DaysExpense: { transactions: [] },
+        last60DaysIncome: { transactions: [] }
+      });
     } finally {
       setLoading(false);
     }

@@ -11,6 +11,7 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
   const [totalIncome, setTotalIncome] = useState(0);
 
   useEffect(() => {
+    console.log('IncomeOverview transactions:', transactions);
     const result = prepareIncomeBarChartData(transactions);
     setChartData(result);
     
@@ -19,7 +20,12 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
     setWeeklyData(weeklyResult);
     
     // Calculate total income
-    const total = transactions?.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0) || 0;
+    const total = Array.isArray(transactions) 
+      ? transactions.reduce((sum, transaction) => {
+          const amount = Number(transaction?.amount) || 0;
+          return sum + amount;
+        }, 0)
+      : 0;
     setTotalIncome(total);
 
     return () => { };

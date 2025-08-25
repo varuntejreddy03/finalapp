@@ -26,7 +26,8 @@ const Income = () => {
         setLoading(true);
         try {
             const response = await axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME);
-            setIncomeData(response.data.incomes || []);
+            console.log('Income API Response:', response.data);
+            setIncomeData(response.data?.incomes || response.data?.data || response.data || []);
         } catch (error) {
             console.error("Failed to fetch income data:", error);
             toast.error("Could not load income data. Please try again.");
@@ -48,7 +49,7 @@ const Income = () => {
         try {
             const response = await axiosInstance.post(API_PATHS.INCOME.ADD_INCOME, {
                 source,
-                amount,
+                amount: Number(amount),
                 date,
                 icon,
             });

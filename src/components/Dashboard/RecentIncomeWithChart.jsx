@@ -8,10 +8,11 @@ const RecentIncomeWithChart = ({ data, totalIncome }) => {
     const [chartData, setChartData] = useState([]);
 
     const prepareChartData = () => {
-        const dataArr = data?.map((item) => ({
+        console.log('RecentIncomeWithChart data:', data);
+        const dataArr = Array.isArray(data) ? data.map((item) => ({
             name: item?.source,
             amount: item?.amount
-        }));
+        })) : [];
 
         setChartData(dataArr);
     };
@@ -28,13 +29,20 @@ const RecentIncomeWithChart = ({ data, totalIncome }) => {
         <h5 className="text-lg">Recent Income</h5>
       </div>
 
-      <CustomPieChart
-        data={chartData}
-        label="Total Income"
-        totalAmount={`₹${totalIncome}`}
-        colors={COLORS}
-        showTextAnchor
-      />
+      {Array.isArray(chartData) && chartData.length > 0 ? (
+        <CustomPieChart
+          data={chartData}
+          label="Total Income"
+          totalAmount={`₹${totalIncome || 0}`}
+          colors={COLORS}
+          showTextAnchor
+        />
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500 text-sm">No income data available</p>
+          <p className="text-gray-400 text-xs mt-1">Add some income to see the chart</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -27,9 +27,11 @@ const Expense = () => {
 
     try {
       const response = await axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSES);
-      setExpenseData(response.data.expenses || []);
+      console.log('Expense API Response:', response.data);
+      setExpenseData(response.data?.expenses || response.data?.data || response.data || []);
     } catch (error) {
-      console.log("Something went wrong. Please try again later.", error);
+      console.error("Failed to fetch expense data:", error);
+      toast.error("Could not load expense data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +60,7 @@ const Expense = () => {
     try {
       const response = await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, {
         category,
-        amount,
+        amount: Number(amount),
         date,
         icon,
       });
@@ -69,9 +71,10 @@ const Expense = () => {
       toast.success("Expense created successfully");
     } catch (error) {
       console.error(
-        "Error while adding expense. Please try again later.",
-        error.response?.data?.message || error.message
+        "Error while adding expense:",
+        error
       );
+      toast.error(error.response?.data?.message || "Failed to add expense.");
     }
   };
 
