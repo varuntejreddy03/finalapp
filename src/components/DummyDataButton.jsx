@@ -51,10 +51,10 @@ const DummyDataButton = ({ onDataAdded }) => {
     <div className="card mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          🧪 Testing Mode
+          📊 Quick Data Setup
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Add dummy data to test the application features
+          Add sample financial data to get started quickly
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -64,7 +64,7 @@ const DummyDataButton = ({ onDataAdded }) => {
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LuDatabase size={16} />
-            {isLoading ? 'Adding...' : 'Add All Dummy Data'}
+            {isLoading ? 'Adding...' : 'Add Sample Data'}
           </button>
           
           <button
@@ -87,7 +87,7 @@ const DummyDataButton = ({ onDataAdded }) => {
         </div>
         
         <p className="text-xs text-gray-500 mt-3">
-          ⚠️ This will add real data to your account. Use only for testing purposes.
+          💡 This will add realistic financial entries to your account
         </p>
       </div>
     </div>

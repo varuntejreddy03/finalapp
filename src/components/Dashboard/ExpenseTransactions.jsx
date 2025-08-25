@@ -15,9 +15,7 @@ const ExpenseTransactions = ({ transactions, onSeeMore }) => {
             </div>
 
             <div className="mt-6">
-                {transactions.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No recent expenses</p>
-                ) : (
+                {transactions && transactions.length > 0 ? (
                     transactions.slice(0, 4).map((expense) => (
                         <TransactionInfoCard
                             key={expense._id}
@@ -29,6 +27,11 @@ const ExpenseTransactions = ({ transactions, onSeeMore }) => {
                             hideDeleteBtn
                         />
                     ))
+                ) : (
+                    <div className="text-center py-8">
+                        <p className="text-gray-500 text-sm">No recent expenses</p>
+                        <p className="text-gray-400 text-xs mt-1">Add some expense entries to see them here</p>
+                    </div>
                 )}
             </div>
         </div>

@@ -122,11 +122,19 @@ const Expense = () => {
     return () => { };
   }, []);
 
+  // Add a small delay and refetch to ensure data is loaded properly
+  const handleDataAdded = async () => {
+    // Wait a bit for the API to process all the data
+    setTimeout(() => {
+      fetchExpenseDetails();
+    }, 1000);
+  };
+
   return (
     <DashboardLayout activeMenu="Expense">
       <div className="my-5 mx-auto">
-        {/* Dummy Data Button for Testing */}
-        <DummyDataButton onDataAdded={fetchExpenseDetails} />
+        {/* Sample Data Button */}
+        <DummyDataButton onDataAdded={handleDataAdded} />
 
         <div className="grid grid-cols-1 gap-6">
           <div className="">

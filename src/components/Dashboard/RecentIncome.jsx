@@ -15,7 +15,30 @@ const RecentIncome = ({ transactions, onSeeMore }) => {
       </div>
 
       <div className="mt-6">
-        {transactions?.slice(0, 5)?.map((item) => (
+        {transactions && transactions.length > 0 ? (
+          transactions.slice(0, 5).map((item) => (
+            <TransactionInfoCard
+              key={item._id}
+              title={item.source}
+              icon={item.icon}
+              date={moment(item.date).format("Do MMM YYYY")}
+              amount={item.amount}
+              type="income"
+              hideDeleteBtn
+            />
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">No recent income</p>
+            <p className="text-gray-400 text-xs mt-1">Add some income entries to see them here</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default RecentIncome
           <TransactionInfoCard
             key={item._id}
             title={item.source}

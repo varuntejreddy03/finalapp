@@ -50,7 +50,7 @@ export const addDummyIncomeData = async () => {
   let successCount = 0;
   let errorCount = 0;
 
-  toast.loading('Adding dummy income data...', { id: 'income-loading' });
+  toast.loading('Adding sample income data...', { id: 'income-loading' });
 
   for (const income of dummyIncomeData) {
     try {
@@ -87,7 +87,7 @@ export const addDummyExpenseData = async () => {
   let successCount = 0;
   let errorCount = 0;
 
-  toast.loading('Adding dummy expense data...', { id: 'expense-loading' });
+  toast.loading('Adding sample expense data...', { id: 'expense-loading' });
 
   for (const expense of dummyExpenseData) {
     try {
@@ -121,7 +121,7 @@ export const addDummyExpenseData = async () => {
 
 // Function to add all dummy data
 export const addAllDummyData = async () => {
-  toast.loading('Adding all dummy data...', { id: 'all-loading' });
+  toast.loading('Adding sample data...', { id: 'all-loading' });
   
   try {
     const incomeResult = await addDummyIncomeData();
@@ -133,7 +133,7 @@ export const addAllDummyData = async () => {
     const totalErrors = incomeResult.errorCount + expenseResult.errorCount;
     
     if (totalSuccess > 0) {
-      toast.success(`🎉 Successfully added ${totalSuccess} dummy entries! Your account is ready for testing.`);
+      toast.success(`🎉 Successfully added ${totalSuccess} sample entries! Your dashboard is ready.`);
     }
     if (totalErrors > 0) {
       toast.error(`⚠️ ${totalErrors} entries failed to add`);
@@ -142,7 +142,7 @@ export const addAllDummyData = async () => {
     return { totalSuccess, totalErrors };
   } catch (error) {
     toast.dismiss('all-loading');
-    toast.error('Failed to add dummy data');
+    toast.error('Failed to add sample data');
     console.error('Error adding dummy data:', error);
   }
 };
