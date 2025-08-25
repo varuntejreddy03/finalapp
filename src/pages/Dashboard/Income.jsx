@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/DeleteAlert';
 import { useUserAuth } from '../../hooks/useUserAuth';
+import DummyDataButton from '../../components/DummyDataButton';
 
 const Income = () => {
     useUserAuth();
@@ -108,6 +109,9 @@ const Income = () => {
     return (
         <DashboardLayout activeMenu="Income">
             <div className="my-5 mx-auto">
+                {/* Dummy Data Button for Testing */}
+                <DummyDataButton onDataAdded={fetchIncomeDetails} />
+
                 <div className="grid grid-cols-1 gap-6">
                     <div>
                         <IncomeOverview

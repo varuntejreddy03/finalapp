@@ -15,6 +15,7 @@ import ExpenseTransactions from "../../components/Dashboard/ExpenseTransactions"
 import Last30DaysExpense from "../../components/Dashboard/Last30DaysExpense";
 import RecentIncomeWithChart from "../../components/Dashboard/RecentIncomeWithChart";
 import RecentIncome from "../../components/Dashboard/RecentIncome";
+import DummyDataButton from "../../components/DummyDataButton";
 
 // ✅ Import Chatbot
 import SpendWiseBot from "../../components/Chatbot/SpendWiseBot";
@@ -48,6 +49,9 @@ const Home = () => {
   return (
     <DashboardLayout activeMenu="Dashboard">
       <div className="my-5 mx-auto">
+        {/* Dummy Data Button for Testing */}
+        <DummyDataButton onDataAdded={fetchDashboardData} />
+
         {/* Dashboard Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <InfoCard
