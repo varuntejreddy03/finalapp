@@ -15,7 +15,6 @@ import ExpenseTransactions from "../../components/Dashboard/ExpenseTransactions"
 import Last30DaysExpense from "../../components/Dashboard/Last30DaysExpense";
 import RecentIncomeWithChart from "../../components/Dashboard/RecentIncomeWithChart";
 import RecentIncome from "../../components/Dashboard/RecentIncome";
-import DummyDataButton from "../../components/DummyDataButton";
 
 // ✅ Import Chatbot
 import SpendWiseBot from "../../components/Chatbot/SpendWiseBot";
