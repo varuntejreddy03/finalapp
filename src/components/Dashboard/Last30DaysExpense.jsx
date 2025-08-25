@@ -8,8 +8,21 @@ const Last30DaysExpense = ({ data }) => {
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    // Ensure data is an array
-    const expenseData = Array.isArray(data) ? data : [];
+    // Handle different data structures
+    let expenseData = [];
+    
+    if (Array.isArray(data)) {
+      expenseData = data;
+    } else if (data && Array.isArray(data.transactions)) {
+      expenseData = data.transactions;
+    } else if (data && typeof data === 'object') {
+      // Try to extract array from object
+      const possibleArrays = Object.values(data).filter(Array.isArray);
+      if (possibleArrays.length > 0) {
+        expenseData = possibleArrays[0];
+      }
+    }
+    
     console.log('Processing expense data:', expenseData);
     
     const result = prepareExpenseBarChartData(expenseData);

@@ -11,13 +11,19 @@ const FinanceOverview = ({ totalBalance, totalIncome, totalExpense }) => {
     const income = Number(totalIncome) || 0;
     const expense = Number(totalExpense) || 0;
     
+    // Only show chart if we have meaningful data
+    const hasData = income > 0 || expense > 0;
+    
     const balanceData = [
-        { name: "Total Balance", amount: balance },
-        { name: "Total Expense", amount: expense },
         { name: "Total Income", amount: income },
+        { name: "Total Expense", amount: expense },
+        { name: "Net Balance", amount: Math.abs(balance) },
     ];
+    
+    // Filter out zero values for better chart display
+    const filteredData = balanceData.filter(item => item.amount > 0);
 
-    console.log('FinanceOverview chart data:', balanceData);
+    console.log('FinanceOverview chart data:', filteredData);
 
     return (
         <div className="card">
@@ -25,13 +31,20 @@ const FinanceOverview = ({ totalBalance, totalIncome, totalExpense }) => {
                 <h5 className="text-lg">Financial Overview</h5>
             </div>
 
-            <CustomPieChart
-                data={balanceData}
-                label="Total Balance"
-                totalAmount={`₹${balance.toLocaleString()}`}
-                colors={COLORS}
-                showTextAnchor
-            />
+            {hasData && filteredData.length > 0 ? (
+                <CustomPieChart
+                    data={filteredData}
+                    label="Net Balance"
+                    totalAmount={`₹${balance.toLocaleString()}`}
+                    colors={COLORS}
+                    showTextAnchor
+                />
+            ) : (
+                <div className="text-center py-8">
+                    <p className="text-gray-500 text-sm">No financial data available</p>
+                    <p className="text-gray-400 text-xs mt-1">Add some income or expenses to see the overview</p>
+                </div>
+            )}
         </div>
     );
 };

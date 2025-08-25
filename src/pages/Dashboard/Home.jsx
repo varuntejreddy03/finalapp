@@ -40,17 +40,59 @@ const Home = () => {
       setDashboardData(data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
-      // Set empty data structure to prevent crashes
-      setDashboardData({
-        totalBalance: 0,
-        totalIncome: 0,
-        totalExpense: 0,
-        recentTransactions: [],
-        last30DaysExpense: { transactions: [] },
-        last60DaysIncome: { transactions: [] },
-        recentIncome: [],
-        recentExpenses: []
-      });
+      
+      // Fallback: Fetch income and expense data separately
+      try {
+        console.log('Fetching income and expense data separately...');
+        const [incomeResponse, expenseResponse] = await Promise.all([
+          axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME),
+          axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSES)
+        ]);
+        
+        console.log('Income Response:', incomeResponse.data);
+        console.log('Expense Response:', expenseResponse.data);
+        
+        const incomeData = incomeResponse.data?.incomes || incomeResponse.data?.data || incomeResponse.data || [];
+        const expenseData = expenseResponse.data?.expenses || expenseResponse.data?.data || expenseResponse.data || [];
+        
+        console.log('Processed Income Data:', incomeData);
+        console.log('Processed Expense Data:', expenseData);
+        
+        const totalIncome = incomeData.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        const totalExpense = expenseData.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        const totalBalance = totalIncome - totalExpense;
+        
+        // Create combined transactions for recent transactions
+        const combinedTransactions = [
+          ...incomeData.map(item => ({ ...item, type: 'income', title: item.source })),
+          ...expenseData.map(item => ({ ...item, type: 'expense', title: item.category }))
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        setDashboardData({
+          totalBalance,
+          totalIncome,
+          totalExpense,
+          recentTransactions: combinedTransactions,
+          last30DaysExpense: { transactions: expenseData },
+          last60DaysIncome: { transactions: incomeData },
+          recentIncome: incomeData,
+          recentExpenses: expenseData
+        });
+        
+        console.log('Fallback dashboard data created successfully');
+      } catch (fallbackError) {
+        console.error('Fallback data fetch also failed:', fallbackError);
+        setDashboardData({
+          totalBalance: 0,
+          totalIncome: 0,
+          totalExpense: 0,
+          recentTransactions: [],
+          last30DaysExpense: { transactions: [] },
+          last60DaysIncome: { transactions: [] },
+          recentIncome: [],
+          recentExpenses: []
+        });
+      }
     } finally {
       setLoading(false);
     }

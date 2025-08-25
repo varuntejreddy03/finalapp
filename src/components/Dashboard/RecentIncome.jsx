@@ -6,8 +6,22 @@ import moment from 'moment';
 const RecentIncome = ({ transactions, onSeeMore }) => {
   console.log('RecentIncome received transactions:', transactions);
   
-  // Ensure transactions is an array
-  const incomeTransactions = Array.isArray(transactions) ? transactions : [];
+  // Handle different data structures
+  let incomeTransactions = [];
+  
+  if (Array.isArray(transactions)) {
+    incomeTransactions = transactions;
+  } else if (transactions && Array.isArray(transactions.transactions)) {
+    incomeTransactions = transactions.transactions;
+  } else if (transactions && typeof transactions === 'object') {
+    // Try to extract array from object
+    const possibleArrays = Object.values(transactions).filter(Array.isArray);
+    if (possibleArrays.length > 0) {
+      incomeTransactions = possibleArrays[0];
+    }
+  }
+  
+  console.log('Processed income transactions:', incomeTransactions);
   
   return (
     <div className="card">
@@ -27,7 +41,7 @@ const RecentIncome = ({ transactions, onSeeMore }) => {
               title={item.source}
               icon={item.icon}
               date={moment(item.date).format("Do MMM YYYY")}
-              amount={item.amount}
+              amount={Number(item.amount) || 0}
               type="income"
               hideDeleteBtn
             />

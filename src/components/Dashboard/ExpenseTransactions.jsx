@@ -6,8 +6,17 @@ import moment from 'moment';
 const ExpenseTransactions = ({ transactions, onSeeMore }) => {
     console.log('ExpenseTransactions received transactions:', transactions);
     
-    // Ensure transactions is an array
-    const expenseTransactions = Array.isArray(transactions) ? transactions : [];
+    // Ensure transactions is an array and has valid data
+    let expenseTransactions = [];
+    
+    if (Array.isArray(transactions)) {
+        expenseTransactions = transactions;
+    } else if (transactions && typeof transactions === 'object') {
+        // Handle case where transactions might be an object with a transactions property
+        expenseTransactions = Array.isArray(transactions.transactions) ? transactions.transactions : [];
+    }
+    
+    console.log('Processed expense transactions:', expenseTransactions);
     
     return (
         <div className="card">
@@ -27,7 +36,7 @@ const ExpenseTransactions = ({ transactions, onSeeMore }) => {
                             title={expense.category}
                             icon={expense.icon}
                             date={moment(expense.date).format("Do MMM YYYY")}
-                            amount={expense.amount}
+                            amount={Number(expense.amount) || 0}
                             type="expense"
                             hideDeleteBtn
                         />

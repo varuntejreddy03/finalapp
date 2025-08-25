@@ -10,8 +10,21 @@ const RecentIncomeWithChart = ({ data, totalIncome }) => {
     const [chartData, setChartData] = useState([]);
 
     const prepareChartData = () => {
-        // Ensure data is an array
-        const incomeData = Array.isArray(data) ? data : [];
+        // Handle different data structures
+        let incomeData = [];
+        
+        if (Array.isArray(data)) {
+            incomeData = data;
+        } else if (data && Array.isArray(data.transactions)) {
+            incomeData = data.transactions;
+        } else if (data && typeof data === 'object') {
+            // Try to extract array from object
+            const possibleArrays = Object.values(data).filter(Array.isArray);
+            if (possibleArrays.length > 0) {
+                incomeData = possibleArrays[0];
+            }
+        }
+        
         console.log('Processing income chart data:', incomeData);
         
         const dataArr = incomeData.map((item) => ({
