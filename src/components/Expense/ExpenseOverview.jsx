@@ -19,7 +19,7 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
         setWeeklyData(weeklyResult);
         
         // Calculate total expense
-        const total = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+        const total = transactions?.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0) || 0;
         setTotalExpense(total);
 
         return () => { };

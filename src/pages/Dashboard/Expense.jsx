@@ -9,7 +9,6 @@ import AddExpenseForm from '../../components/Expense/AddExpenseForm';
 import toast from 'react-hot-toast';
 import ExpenseList from '../../components/Expense/ExpenseList';
 import DeleteAlert from '../../components/DeleteAlert';
-import DummyDataButton from '../../components/DummyDataButton';
 
 const Expense = () => {
   useUserAuth();
@@ -122,20 +121,9 @@ const Expense = () => {
     return () => { };
   }, []);
 
-  // Add a small delay and refetch to ensure data is loaded properly
-  const handleDataAdded = async () => {
-    // Wait a bit for the API to process all the data
-    setTimeout(() => {
-      fetchExpenseDetails();
-    }, 1000);
-  };
-
   return (
     <DashboardLayout activeMenu="Expense">
       <div className="my-5 mx-auto">
-        {/* Sample Data Button */}
-        <DummyDataButton onDataAdded={handleDataAdded} />
-
         <div className="grid grid-cols-1 gap-6">
           <div className="">
             <ExpenseOverview

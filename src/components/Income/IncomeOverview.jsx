@@ -19,7 +19,7 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
     setWeeklyData(weeklyResult);
     
     // Calculate total income
-    const total = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+    const total = transactions?.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0) || 0;
     setTotalIncome(total);
 
     return () => { };

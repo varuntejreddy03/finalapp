@@ -4,7 +4,7 @@ import { LuDownload } from 'react-icons/lu'
 import TransactionInfoCard from '../Cards/TransactionInfoCard'
 
 const ExpenseList = ({ transactions, onDelete, onDownload}) => {
-  const totalExpense = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+  const totalExpense = transactions?.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0) || 0;
   
   return (
     <div className="card">
