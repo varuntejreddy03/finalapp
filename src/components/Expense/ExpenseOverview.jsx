@@ -8,6 +8,7 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
     const [chartData, setChartData] = useState([]);
     const [weeklyData, setWeeklyData] = useState([]);
     const [viewMode, setViewMode] = useState('monthly'); // monthly or weekly
+    const [totalExpense, setTotalExpense] = useState(0);
 
     useEffect(() => {
         const result = prepareExpenseLineChartData(transactions);
@@ -16,6 +17,10 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
         // Prepare weekly data
         const weeklyResult = prepareWeeklyExpenseData(transactions);
         setWeeklyData(weeklyResult);
+        
+        // Calculate total expense
+        const total = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+        setTotalExpense(total);
 
         return () => { };
     }, [transactions]);
@@ -52,8 +57,8 @@ const ExpenseOverview = ({ transactions, onExpenseIncome }) => {
                 <div className="">
                     <h5 className="text-lg">Expense Overview</h5>
                     <p className="text-xs text-gray-400 mt-0.5">
-                        Track your Expenses easily and effectively
 
+                        Track your Expenses easily and effectively • Total: ₹{totalExpense.toLocaleString()}
                     </p>
                 </div>
 

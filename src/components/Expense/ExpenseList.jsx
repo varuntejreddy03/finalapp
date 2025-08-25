@@ -4,10 +4,15 @@ import { LuDownload } from 'react-icons/lu'
 import TransactionInfoCard from '../Cards/TransactionInfoCard'
 
 const ExpenseList = ({ transactions, onDelete, onDownload}) => {
+  const totalExpense = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+  
   return (
     <div className="card">
         <div className="flex items-center justify-between">
-            <h5 className="text-lg">All Expenses</h5>
+            <div>
+                <h5 className="text-lg">All Expenses</h5>
+                <p className="text-sm text-gray-500">Total: ₹{totalExpense.toLocaleString()} • {transactions.length} entries</p>
+            </div>
 
             <button className="card-btn" onClick={onDownload}>
                 <LuDownload className="text-base" /> Download

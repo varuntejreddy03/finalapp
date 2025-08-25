@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import { useUserAuth } from "../../hooks/useUserAuth";
 import { useNavigate } from "react-router-dom";
-// import axiosInstance from "../../utils/axiosInstance";
-// import { API_PATHS } from "../../utils/apiPaths";
-import { dummyDashboardData, calculateTotals } from "../../utils/dummyData";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
 import InfoCard from "../../components/Cards/InfoCard";
 
 import { LuHandCoins, LuWalletMinimal } from "react-icons/lu";
@@ -32,16 +31,8 @@ const Home = () => {
     setLoading(true);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const totals = calculateTotals();
-      const dashboardData = {
-        ...dummyDashboardData,
-        ...totals
-      };
-      
-      setDashboardData(dashboardData);
+      const response = await axiosInstance.get(API_PATHS.DASHBOARD.GET_DATA);
+      setDashboardData(response.data);
     } catch (error) {
       console.log("Something went wrong. Please try again later.", error);
     } finally {

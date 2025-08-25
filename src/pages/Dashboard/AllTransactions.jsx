@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { useUserAuth } from '../../hooks/useUserAuth';
-import { dummyIncome, dummyExpenses } from '../../utils/dummyData';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
 import TransactionInfoCard from '../../components/Cards/TransactionInfoCard';
 import { LuDownload, LuFilter } from 'react-icons/lu';
 import moment from 'moment';
-// import axiosInstance from '../../utils/axiosInstance';
-// import { API_PATHS } from '../../utils/apiPaths';
 import toast from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import DeleteAlert from '../../components/DeleteAlert';
@@ -27,16 +26,19 @@ const AllTransactions = () => {
   const fetchAllTransactions = async () => {
     setLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const incomeData = dummyIncome.map(item => ({
+      // Fetch both income and expense data
+      const [incomeResponse, expenseResponse] = await Promise.all([
+        axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME),
+        axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSES)
+      ]);
+
+      const incomeData = (incomeResponse.data.incomes || []).map(item => ({
         ...item,
         type: 'income',
         title: item.source
       }));
 
-      const expenseData = dummyExpenses.map(item => ({
+      const expenseData = (expenseResponse.data.expenses || []).map(item => ({
         ...item,
         type: 'expense',
         title: item.category
@@ -66,15 +68,15 @@ const AllTransactions = () => {
 
   const handleDeleteTransaction = async (id, type) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Delete from API
+      if (type === 'income') {
+        await axiosInstance.delete(API_PATHS.INCOME.DELETE_INCOME(id));
+      } else {
+        await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
+      }
       
-      // Remove from local state
-      const updatedTransactions = transactions.filter(t => t._id !== id);
-      setTransactions(updatedTransactions);
-      
-      // Update filtered transactions
-      handleFilterChange(filter);
+      // Refresh all transactions
+      await fetchAllTransactions();
       
       setOpenDeleteAlert({ show: false, data: null, type: null });
       toast.success(`${type === 'income' ? 'Income' : 'Expense'} deleted successfully`);

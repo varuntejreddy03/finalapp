@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useUserAuth } from '../../hooks/useUserAuth'
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-// import { API_PATHS } from '../../utils/apiPaths';
-// import axiosInstance from '../../utils/axiosInstance';
-import { dummyExpenses } from '../../utils/dummyData';
+import { API_PATHS } from '../../utils/apiPaths';
+import axiosInstance from '../../utils/axiosInstance';
 import ExpenseOverview from '../../components/Expense/ExpenseOverview';
 import Modal from '../../components/Modal';
 import AddExpenseForm from '../../components/Expense/AddExpenseForm';
@@ -27,9 +26,8 @@ const Expense = () => {
     setLoading(true);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setExpenseData(dummyExpenses);
+      const response = await axiosInstance.get(API_PATHS.EXPENSE.GET_ALL_EXPENSES);
+      setExpenseData(response.data.expenses || []);
     } catch (error) {
       console.log("Something went wrong. Please try again later.", error);
     } finally {
@@ -58,15 +56,15 @@ const Expense = () => {
     }
 
     try {
-      // Simulate API call
-      const newExpense = {
-        _id: `exp_${Date.now()}`,
+      const response = await axiosInstance.post(API_PATHS.EXPENSE.ADD_EXPENSE, {
         category,
-        amount: Number(amount),
+        amount,
         date,
         icon,
-      };
-      setExpenseData([newExpense, ...expenseData]);
+      });
+      
+      // Refresh the expense data after adding
+      await fetchExpenseDetails();
       setOpenAddExpenseModal(false);
       toast.success("Expense created successfully");
     } catch (error) {
@@ -80,9 +78,9 @@ const Expense = () => {
   // Handle Delete Expense
   const deleteExpense = async (id) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setExpenseData(expenseData.filter(item => item._id !== id));
+      await axiosInstance.delete(API_PATHS.EXPENSE.DELETE_EXPENSE(id));
+      // Refresh the expense data after deleting
+      await fetchExpenseDetails();
       setOpenDeleteAlert({ show: false, data: null });
       toast.success("Expense deleted successfully");
     } catch (error) {
@@ -96,21 +94,16 @@ const Expense = () => {
   // Handle Download Excel
   const handleDownloadExpenseDetails = async () => {
     try {
-      // Create CSV content
-      const csvContent = [
-        ['Date', 'Category', 'Amount'],
-        ...expenseData.map(item => [
-          new Date(item.date).toLocaleDateString(),
-          item.category,
-          item.amount
-        ])
-      ].map(row => row.join(',')).join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const response = await axiosInstance.get(API_PATHS.EXPENSE.DOWNLOAD_EXPENSE, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "expense_details.csv");
+      link.setAttribute("download", "expense_details.xlsx");
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);

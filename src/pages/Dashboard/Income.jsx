@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import IncomeOverview from '../../components/Income/IncomeOverview';
-// import axiosInstance from '../../utils/axiosInstance';
-// import { API_PATHS } from '../../utils/apiPaths';
-import { dummyIncome } from '../../utils/dummyData';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
 import Modal from '../../components/Modal';
 import AddIncomeForm from '../../components/Income/AddIncomeForm';
 import toast from 'react-hot-toast';
@@ -26,9 +25,8 @@ const Income = () => {
     const fetchIncomeDetails = async () => {
         setLoading(true);
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setIncomeData(dummyIncome);
+            const response = await axiosInstance.get(API_PATHS.INCOME.GET_ALL_INCOME);
+            setIncomeData(response.data.incomes || []);
         } catch (error) {
             console.error("Failed to fetch income data:", error);
             toast.error("Could not load income data. Please try again.");
@@ -48,15 +46,15 @@ const Income = () => {
         }
 
         try {
-            // Simulate API call
-            const newIncome = {
-                _id: `inc_${Date.now()}`,
+            const response = await axiosInstance.post(API_PATHS.INCOME.ADD_INCOME, {
                 source,
-                amount: Number(amount),
+                amount,
                 date,
                 icon,
-            };
-            setIncomeData([newIncome, ...incomeData]);
+            });
+            
+            // Refresh the income data after adding
+            await fetchIncomeDetails();
             setOpenAddIncomeModal(false);
             toast.success("Income added successfully");
         } catch (error) {
@@ -68,9 +66,9 @@ const Income = () => {
     // Handle Delete Income
     const deleteIncome = async (id) => {
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 300));
-            setIncomeData(incomeData.filter(item => item._id !== id));
+            await axiosInstance.delete(API_PATHS.INCOME.DELETE_INCOME(id));
+            // Refresh the income data after deleting
+            await fetchIncomeDetails();
             setOpenDeleteAlert({ show: false, data: null });
             toast.success("Income deleted successfully");
         } catch (error) {
@@ -82,21 +80,16 @@ const Income = () => {
     // Handle Download Excel
     const handleDownloadIncomeDetails = async () => {
         try {
-            // Create CSV content
-            const csvContent = [
-                ['Date', 'Source', 'Amount'],
-                ...incomeData.map(item => [
-                    new Date(item.date).toLocaleDateString(),
-                    item.source,
-                    item.amount
-                ])
-            ].map(row => row.join(',')).join('\n');
 
-            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const response = await axiosInstance.get(API_PATHS.INCOME.DOWNLOAD_INCOME, {
+                responseType: 'blob'
+            });
+            
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "income_details.csv");
+            link.setAttribute("download", "income_details.xlsx");
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);

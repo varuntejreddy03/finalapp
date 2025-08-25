@@ -8,6 +8,7 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
   const [chartData, setChartData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [viewMode, setViewMode] = useState('monthly'); // monthly or weekly
+  const [totalIncome, setTotalIncome] = useState(0);
 
   useEffect(() => {
     const result = prepareIncomeBarChartData(transactions);
@@ -16,6 +17,10 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
     // Prepare weekly data
     const weeklyResult = prepareWeeklyIncomeData(transactions);
     setWeeklyData(weeklyResult);
+    
+    // Calculate total income
+    const total = transactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+    setTotalIncome(total);
 
     return () => { };
   }, [transactions]);
@@ -52,7 +57,7 @@ const IncomeOverview = ({ transactions, onAddIncome }) => {
         <div className="">
           <h5 className="text-lg">Income Overview</h5>
           <p className="text-xs text-gray-400 mt-0.5">
-            Track your Earnings easily
+            Track your Earnings easily • Total: ₹{totalIncome.toLocaleString()}
           </p>
         </div>
 
