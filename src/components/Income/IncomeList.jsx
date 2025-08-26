@@ -8,7 +8,7 @@ const IncomeList = ({ transactions, onDelete, onDownload }) => {
   
   const totalIncome = Array.isArray(transactions) 
     ? transactions.reduce((sum, transaction) => {
-        const amount = Number(transaction?.amount) || 0;
+        const amountf = Number(transaction?.amount) || 0;
         return sum + amount;
       }, 0)
     : 0;
