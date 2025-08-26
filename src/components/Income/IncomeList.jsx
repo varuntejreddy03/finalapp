@@ -9,7 +9,7 @@ const IncomeList = ({ transactions, onDelete, onDownload }) => {
   const totalIncome = Array.isArray(transactions) 
     ? transactions.reduce((sum, transaction) => {
         const amountf = Number(transaction?.amount) || 0;
-        return sum + amount;
+        return sum + amountf;   // ✅ fixed here
       }, 0)
     : 0;
   
@@ -18,7 +18,9 @@ const IncomeList = ({ transactions, onDelete, onDownload }) => {
         <div className="flex items-center justify-between">
             <div>
                 <h5 className="text-lg">Income Source</h5>
-                <p className="text-sm text-gray-500">Total: ₹{totalIncome.toLocaleString()} • {Array.isArray(transactions) ? transactions.length : 0} entries</p>
+                <p className="text-sm text-gray-500">
+                  Total: ₹{totalIncome.toLocaleString()} • {Array.isArray(transactions) ? transactions.length : 0} entries
+                </p>
             </div>
 
             <button className="card-btn" onClick={onDownload}>
