@@ -20,7 +20,10 @@ const SideMenu = ({ activeMenu }) => {
     };
 
     const handleLogout = () => {
-        localStorage.clear();
+        // Clear all session data
+        localStorage.removeItem('token');
+        localStorage.removeItem('session_timestamp');
+        localStorage.removeItem('hasSeenSpendWiseBot');
         clearUser();
         navigate('/login');
     };

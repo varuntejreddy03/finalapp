@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { UserContext } from '../../context/userContext';
 import CharAvatar from '../Cards/CharAvatar';
-import PaymentMethodCard from '../Cards/PaymentMethodCard';
+import PaymentMethodManager from './PaymentMethodManager';
 import { LuPencil, LuPlus, LuTrendingUp, LuTrendingDown, LuTarget, LuCalendar } from 'react-icons/lu';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
@@ -22,23 +22,6 @@ const ProfileView = ({ onEditProfile }) => {
   });
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
-  // Dummy payment methods for demo (in real app, fetch from API)
-  const [paymentMethods] = useState([
-    {
-      id: 1,
-      type: 'card',
-      number: '1234567890123456',
-      name: `${user?.firstName || 'John'} ${user?.lastName || 'Doe'}`,
-      expiry: '12/26'
-    },
-    {
-      id: 2,
-      type: 'upi',
-      upiId: `${user?.firstName?.toLowerCase() || 'john'}.${user?.lastName?.toLowerCase() || 'doe'}@paytm`,
-      name: `${user?.firstName || 'John'} ${user?.lastName || 'Doe'}`
-    }
-  ]);
 
   // Fetch profile statistics from API
   const fetchProfileStats = async () => {
@@ -218,21 +201,7 @@ const ProfileView = ({ onEditProfile }) => {
       </div>
 
       {/* Payment Methods */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold">Payment Methods</h3>
-          <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-            <LuPlus size={16} />
-            Add Method
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paymentMethods.map((method) => (
-            <PaymentMethodCard key={method.id} {...method} />
-          ))}
-        </div>
-      </div>
+      <PaymentMethodManager />
 
       {/* Account Statistics */}
       <div className="card">

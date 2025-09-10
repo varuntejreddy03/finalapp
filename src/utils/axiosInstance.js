@@ -1,6 +1,30 @@
 import axios from "axios";
 import { BASE_URL } from "./apiPaths";
 
+// Session management utilities
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SESSION_KEY = 'session_timestamp';
+
+const isSessionValid = () => {
+    const sessionTime = localStorage.getItem(SESSION_KEY);
+    if (!sessionTime) return false;
+    
+    const currentTime = new Date().getTime();
+    const sessionTimestamp = parseInt(sessionTime);
+    
+    return (currentTime - sessionTimestamp) < SESSION_TIMEOUT;
+};
+
+const updateSessionTime = () => {
+    localStorage.setItem(SESSION_KEY, new Date().getTime().toString());
+};
+
+const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('hasSeenSpendWiseBot');
+};
+
 const axiosInstance = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,
@@ -14,9 +38,19 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config) => {
         const accessToken = localStorage.getItem("token");
-        if (accessToken) {
+        
+        // Check session validity before making requests
+        if (accessToken && isSessionValid()) {
             config.headers.Authorization = `Bearer ${accessToken}`;
+            // Update session time on each request
+            updateSessionTime();
+        } else if (accessToken && !isSessionValid()) {
+            // Session expired, clear everything
+            clearSession();
+            window.location.href = "/login";
+            return Promise.reject(new Error('Session expired'));
         }
+        
         return config;
     },
     (error) => {
@@ -33,6 +67,8 @@ axiosInstance.interceptors.response.use(
         // Handle common errors globally
         if (error.response) {
             if (error.response.status === 401) {
+                // Clear session and redirect to login
+                clearSession();
                 // Redirect to login
                 window.location.href = "/login";
             } else if (error.response.status === 500) {
@@ -45,4 +81,6 @@ axiosInstance.interceptors.response.use(
     }
 );
 
+// Export session utilities
+export { isSessionValid, updateSessionTime, clearSession };
 export default axiosInstance;

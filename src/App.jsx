@@ -19,6 +19,7 @@ import AllTransactions from "./pages/Dashboard/AllTransactions";
 
 import UserProvider from "./context/userContext";
 import { Toaster } from "react-hot-toast";
+import { isSessionValid } from "./utils/axiosInstance";
 
 const App = () => {
   return (
@@ -101,8 +102,15 @@ const App = () => {
 
 export default App;
 
-// Your PrivateRoute component is correct and remains the same
+// Enhanced PrivateRoute with session validation
 const PrivateRoute = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  const isAuthenticated = token && isSessionValid();
+  
+  // If token exists but session is invalid, clear everything
+  if (token && !isSessionValid()) {
+    localStorage.clear();
+  }
+  
   return isAuthenticated ? children : <Navigate to="/login" />;
 };

@@ -6,6 +6,7 @@ import { validateEmail } from "../../utils/helper";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext"; // 2. Import UserContext
+import { updateSessionTime } from "../../utils/axiosInstance";
 import toast from "react-hot-toast";
 
 const Login = () => {
@@ -42,6 +43,8 @@ const Login = () => {
 
             if (token) {
                 localStorage.setItem("token", token);
+                // Set session timestamp
+                updateSessionTime();
                 // 4. THE FIX: Update the user context immediately after login
                 updateUser(user); 
                 toast.success("Login successful!");
