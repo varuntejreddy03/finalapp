@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LuPlus, LuCreditCard, LuSmartphone, LuTrash2, LuEdit } from 'react-icons/lu';
+import { LuPlus, LuCreditCard, LuSmartphone, LuTrash2, LuPencil } from 'react-icons/lu';
 import Modal from '../Modal';
 import Input from '../Inputs/Input';
 import toast from 'react-hot-toast';
