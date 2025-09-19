@@ -3,8 +3,6 @@ import { LuPlus, LuCreditCard, LuSmartphone, LuTrash2, LuEdit } from 'react-icon
 import Modal from '../Modal';
 import Input from '../Inputs/Input';
 import toast from 'react-hot-toast';
-import axiosInstance from '../../utils/axiosInstance';
-import { API_PATHS } from '../../utils/apiPaths';
 
 const PaymentMethodManager = () => {
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -12,6 +10,7 @@ const PaymentMethodManager = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMethod, setEditingMethod] = useState(null);
   const [methodType, setMethodType] = useState('card');
+  const [selectedEmoji, setSelectedEmoji] = useState('1f4b3'); // Default credit card emoji
   const [formData, setFormData] = useState({
     name: '',
     number: '',
@@ -20,30 +19,52 @@ const PaymentMethodManager = () => {
     upiId: ''
   });
 
-  // Fetch payment methods on component mount
+  // Popular emoji codes for payment methods
+  const emojiOptions = [
+    { code: '1f4b3', name: 'Credit Card' },
+    { code: '1f4b0', name: 'Money Bag' },
+    { code: '1f4b1', name: 'Currency Exchange' },
+    { code: '1f4b5', name: 'Dollar Banknote' },
+    { code: '1f4b8', name: 'Money with Wings' },
+    { code: '1f4bc', name: 'Briefcase' },
+    { code: '1f3e6', name: 'Bank' },
+    { code: '1f4f1', name: 'Mobile Phone' },
+    { code: '2728', name: 'Sparkles' },
+    { code: '1f31f', name: 'Glowing Star' }
+  ];
+
+  // Load payment methods from localStorage on component mount
   useEffect(() => {
-    fetchPaymentMethods();
+    loadPaymentMethods();
   }, []);
 
-  const fetchPaymentMethods = async () => {
+  const loadPaymentMethods = () => {
     setLoading(true);
     try {
-      // Try to fetch from API, fallback to localStorage
-      const response = await axiosInstance.get(API_PATHS.PAYMENT.GET_METHODS);
-      setPaymentMethods(response.data?.methods || []);
-    } catch (error) {
-      console.log('API not available, using localStorage');
       const savedMethods = localStorage.getItem('paymentMethods');
       if (savedMethods) {
-        setPaymentMethods(JSON.parse(savedMethods));
+        const methods = JSON.parse(savedMethods);
+        setPaymentMethods(methods);
+      } else {
+        // Initialize with empty array
+        setPaymentMethods([]);
       }
+    } catch (error) {
+      console.error('Error loading payment methods:', error);
+      setPaymentMethods([]);
+      toast.error('Failed to load payment methods');
     } finally {
       setLoading(false);
     }
   };
 
-  const saveToStorage = (methods) => {
-    localStorage.setItem('paymentMethods', JSON.stringify(methods));
+  const saveToLocalStorage = (methods) => {
+    try {
+      localStorage.setItem('paymentMethods', JSON.stringify(methods));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      toast.error('Failed to save payment methods');
+    }
   };
 
   const resetForm = () => {
@@ -55,6 +76,7 @@ const PaymentMethodManager = () => {
       upiId: ''
     });
     setMethodType('card');
+    setSelectedEmoji('1f4b3');
     setEditingMethod(null);
   };
 
@@ -66,6 +88,7 @@ const PaymentMethodManager = () => {
   const handleEditMethod = (method) => {
     setEditingMethod(method);
     setMethodType(method.type);
+    setSelectedEmoji(method.emoji || '1f4b3');
     setFormData({
       name: method.name || '',
       number: method.number || '',
@@ -76,20 +99,14 @@ const PaymentMethodManager = () => {
     setShowAddModal(true);
   };
 
-  const handleDeleteMethod = async (id) => {
+  const handleDeleteMethod = (id) => {
     try {
-      // Try API first, fallback to local storage
-      try {
-        await axiosInstance.delete(API_PATHS.PAYMENT.DELETE_METHOD(id));
-      } catch (error) {
-        console.log('API not available, using localStorage');
-      }
-      
       const updatedMethods = paymentMethods.filter(method => method.id !== id);
       setPaymentMethods(updatedMethods);
-      saveToStorage(updatedMethods);
+      saveToLocalStorage(updatedMethods);
       toast.success('Payment method deleted successfully');
     } catch (error) {
+      console.error('Error deleting payment method:', error);
       toast.error('Failed to delete payment method');
     }
   };
@@ -122,15 +139,16 @@ const PaymentMethodManager = () => {
     return true;
   };
 
-  const handleSaveMethod = async () => {
+  const handleSaveMethod = () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
       const newMethod = {
-        id: editingMethod ? editingMethod.id : Date.now(),
+        id: editingMethod ? editingMethod.id : Date.now().toString(),
         type: methodType,
         name: formData.name.trim(),
+        emoji: selectedEmoji,
         ...(methodType === 'card' ? {
           number: formData.number.replace(/\s/g, ''),
           expiry: formData.expiry,
@@ -138,19 +156,9 @@ const PaymentMethodManager = () => {
         } : {
           upiId: formData.upiId.toLowerCase()
         }),
-        createdAt: editingMethod ? editingMethod.createdAt : new Date().toISOString()
+        createdAt: editingMethod ? editingMethod.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-
-      // Try API first, fallback to localStorage
-      try {
-        if (editingMethod) {
-          await axiosInstance.put(API_PATHS.PAYMENT.UPDATE_METHOD(editingMethod.id), newMethod);
-        } else {
-          await axiosInstance.post(API_PATHS.PAYMENT.ADD_METHOD, newMethod);
-        }
-      } catch (error) {
-        console.log('API not available, using localStorage');
-      }
 
       let updatedMethods;
       if (editingMethod) {
@@ -164,10 +172,11 @@ const PaymentMethodManager = () => {
       }
 
       setPaymentMethods(updatedMethods);
-      saveToStorage(updatedMethods);
+      saveToLocalStorage(updatedMethods);
       setShowAddModal(false);
       resetForm();
     } catch (error) {
+      console.error('Error saving payment method:', error);
       toast.error('Failed to save payment method');
     } finally {
       setLoading(false);
@@ -193,12 +202,16 @@ const PaymentMethodManager = () => {
     return formatted.slice(0, 19); // Max 16 digits + 3 spaces
   };
 
+  const getEmojiUrl = (emojiCode) => {
+    return `https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${emojiCode}.png`;
+  };
+
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold">Payment Methods</h3>
-          <p className="text-sm text-gray-500">Manage your cards and UPI accounts</p>
+          <p className="text-sm text-gray-500">Manage your cards and UPI accounts (stored locally)</p>
         </div>
         <button 
           onClick={handleAddMethod}
@@ -232,11 +245,25 @@ const PaymentMethodManager = () => {
           {paymentMethods.map((method) => (
             <div key={method.id} className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-xl text-white shadow-lg relative group">
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  {method.type === 'card' ? <LuCreditCard size={24} /> : <LuSmartphone size={24} />}
-                  <span className="text-sm font-medium">
-                    {method.type === 'card' ? 'Card' : 'UPI'}
-                  </span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={getEmojiUrl(method.emoji || '1f4b3')} 
+                    alt="Payment method icon"
+                    className="w-8 h-8"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                  {method.type === 'card' ? <LuCreditCard size={24} style={{display: 'none'}} /> : <LuSmartphone size={24} style={{display: 'none'}} />}
+                  <div>
+                    <span className="text-sm font-medium">
+                      {method.type === 'card' ? 'Card' : 'UPI'}
+                    </span>
+                    <div className="text-xs opacity-75">
+                      {method.type === 'card' ? 'VISA/MASTERCARD' : 'UPI Payment'}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -295,6 +322,32 @@ const PaymentMethodManager = () => {
         title={editingMethod ? 'Edit Payment Method' : 'Add Payment Method'}
       >
         <div className="space-y-4">
+          {/* Emoji Selection */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">Choose Icon</label>
+            <div className="grid grid-cols-5 gap-2">
+              {emojiOptions.map((emoji) => (
+                <button
+                  key={emoji.code}
+                  type="button"
+                  onClick={() => setSelectedEmoji(emoji.code)}
+                  className={`p-2 rounded-lg border-2 transition-colors ${
+                    selectedEmoji === emoji.code 
+                      ? 'border-purple-500 bg-purple-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  title={emoji.name}
+                >
+                  <img 
+                    src={getEmojiUrl(emoji.code)} 
+                    alt={emoji.name}
+                    className="w-8 h-8 mx-auto"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Method Type Selection */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">Payment Method Type</label>
@@ -417,8 +470,8 @@ const PaymentMethodManager = () => {
 
           {/* Help Text */}
           <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-            <p className="font-medium mb-1">Security Note:</p>
-            <p>Your payment information is stored securely and masked for display. Only the last 4 digits of cards are shown.</p>
+            <p className="font-medium mb-1">Local Storage Note:</p>
+            <p>Your payment information is stored locally in your browser and masked for display. Data persists until you clear browser data.</p>
           </div>
         </div>
       </Modal>
