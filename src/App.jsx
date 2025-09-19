@@ -105,11 +105,13 @@ export default App;
 // Enhanced PrivateRoute with session validation
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
-  const isAuthenticated = token && isSessionValid();
+  const sessionValid = isSessionValid();
+  const isAuthenticated = token && sessionValid;
   
   // If token exists but session is invalid, clear everything
-  if (token && !isSessionValid()) {
+  if (token && !sessionValid) {
     localStorage.clear();
+    sessionStorage.clear();
   }
   
   return isAuthenticated ? children : <Navigate to="/login" />;

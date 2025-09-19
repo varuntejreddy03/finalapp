@@ -24,6 +24,9 @@ const SideMenu = ({ activeMenu }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('session_timestamp');
         localStorage.removeItem('hasSeenSpendWiseBot');
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('paymentMethods');
+        sessionStorage.clear();
         clearUser();
         navigate('/login');
     };

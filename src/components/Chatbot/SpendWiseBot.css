@@ -81,49 +81,44 @@
 .chatbot-body {
   flex: 1;
   background: #f9fafb;
-  overflow-y: auto !important;
+  overflow-y: hidden !important;
   overflow-x: hidden !important;
   padding: 10px;
   max-height: calc(550px - 120px); /* Adjust based on header and input heights */
 }
 
-/* Fix scrollbar issues */
+/* Fix scrollbar issues - Single scrollbar only */
 .react-chatbot-kit-chat-container {
-  overflow-y: auto !important;
+  overflow-y: hidden !important;
   overflow-x: hidden !important;
   max-height: 100% !important;
+  height: 100% !important;
 }
 
 .react-chatbot-kit-chat-message-container {
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  max-height: 100% !important;
+  max-height: calc(100% - 20px) !important;
+  height: calc(100% - 20px) !important;
   padding-right: 5px; /* Space for scrollbar */
+  scrollbar-width: thin;
 }
 
-/* Custom scrollbar styling */
-.chatbot-body::-webkit-scrollbar,
-.react-chatbot-kit-chat-container::-webkit-scrollbar,
+/* Custom scrollbar styling - Only for message container */
 .react-chatbot-kit-chat-message-container::-webkit-scrollbar {
   width: 6px;
 }
 
-.chatbot-body::-webkit-scrollbar-track,
-.react-chatbot-kit-chat-container::-webkit-scrollbar-track,
 .react-chatbot-kit-chat-message-container::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
-.chatbot-body::-webkit-scrollbar-thumb,
-.react-chatbot-kit-chat-container::-webkit-scrollbar-thumb,
 .react-chatbot-kit-chat-message-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
-.chatbot-body::-webkit-scrollbar-thumb:hover,
-.react-chatbot-kit-chat-container::-webkit-scrollbar-thumb:hover,
 .react-chatbot-kit-chat-message-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }

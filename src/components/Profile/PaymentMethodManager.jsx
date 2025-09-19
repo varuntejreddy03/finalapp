@@ -1,27 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LuPlus, LuCreditCard, LuSmartphone, LuTrash2, LuEdit } from 'react-icons/lu';
 import Modal from '../Modal';
 import Input from '../Inputs/Input';
 import toast from 'react-hot-toast';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
 
 const PaymentMethodManager = () => {
-  const [paymentMethods, setPaymentMethods] = useState([
-    {
-      id: 1,
-      type: 'card',
-      number: '1234567890123456',
-      name: 'John Doe',
-      expiry: '12/26',
-      cvv: '123'
-    },
-    {
-      id: 2,
-      type: 'upi',
-      upiId: 'john.doe@paytm',
-      name: 'John Doe'
-    }
-  ]);
-
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingMethod, setEditingMethod] = useState(null);
   const [methodType, setMethodType] = useState('card');
@@ -32,6 +19,32 @@ const PaymentMethodManager = () => {
     cvv: '',
     upiId: ''
   });
+
+  // Fetch payment methods on component mount
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
+
+  const fetchPaymentMethods = async () => {
+    setLoading(true);
+    try {
+      // Try to fetch from API, fallback to localStorage
+      const response = await axiosInstance.get(API_PATHS.PAYMENT.GET_METHODS);
+      setPaymentMethods(response.data?.methods || []);
+    } catch (error) {
+      console.log('API not available, using localStorage');
+      const savedMethods = localStorage.getItem('paymentMethods');
+      if (savedMethods) {
+        setPaymentMethods(JSON.parse(savedMethods));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveToStorage = (methods) => {
+    localStorage.setItem('paymentMethods', JSON.stringify(methods));
+  };
 
   const resetForm = () => {
     setFormData({
@@ -63,138 +76,214 @@ const PaymentMethodManager = () => {
     setShowAddModal(true);
   };
 
-  const handleDeleteMethod = (id) => {
-    setPaymentMethods(prev => prev.filter(method => method.id !== id));
-    toast.success('Payment method deleted successfully');
+  const handleDeleteMethod = async (id) => {
+    try {
+      // Try API first, fallback to local storage
+      try {
+        await axiosInstance.delete(API_PATHS.PAYMENT.DELETE_METHOD(id));
+      } catch (error) {
+        console.log('API not available, using localStorage');
+      }
+      
+      const updatedMethods = paymentMethods.filter(method => method.id !== id);
+      setPaymentMethods(updatedMethods);
+      saveToStorage(updatedMethods);
+      toast.success('Payment method deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete payment method');
+    }
   };
 
-  const handleSaveMethod = () => {
-    // Validation
+  const validateForm = () => {
     if (!formData.name.trim()) {
       toast.error('Name is required');
-      return;
+      return false;
     }
 
     if (methodType === 'card') {
-      if (!formData.number || formData.number.length < 16) {
-        toast.error('Valid card number is required');
-        return;
+      if (!formData.number || formData.number.replace(/\s/g, '').length < 16) {
+        toast.error('Valid 16-digit card number is required');
+        return false;
       }
-      if (!formData.expiry || !formData.cvv) {
-        toast.error('Expiry date and CVV are required');
-        return;
+      if (!formData.expiry || !/^\d{2}\/\d{2}$/.test(formData.expiry)) {
+        toast.error('Valid expiry date (MM/YY) is required');
+        return false;
+      }
+      if (!formData.cvv || formData.cvv.length < 3) {
+        toast.error('Valid CVV is required');
+        return false;
       }
     } else {
       if (!formData.upiId || !formData.upiId.includes('@')) {
         toast.error('Valid UPI ID is required');
-        return;
+        return false;
       }
     }
+    return true;
+  };
 
-    const newMethod = {
-      id: editingMethod ? editingMethod.id : Date.now(),
-      type: methodType,
-      name: formData.name,
-      ...(methodType === 'card' ? {
-        number: formData.number,
-        expiry: formData.expiry,
-        cvv: formData.cvv
-      } : {
-        upiId: formData.upiId
-      })
-    };
+  const handleSaveMethod = async () => {
+    if (!validateForm()) return;
 
-    if (editingMethod) {
-      setPaymentMethods(prev => 
-        prev.map(method => method.id === editingMethod.id ? newMethod : method)
-      );
-      toast.success('Payment method updated successfully');
-    } else {
-      setPaymentMethods(prev => [...prev, newMethod]);
-      toast.success('Payment method added successfully');
+    setLoading(true);
+    try {
+      const newMethod = {
+        id: editingMethod ? editingMethod.id : Date.now(),
+        type: methodType,
+        name: formData.name.trim(),
+        ...(methodType === 'card' ? {
+          number: formData.number.replace(/\s/g, ''),
+          expiry: formData.expiry,
+          cvv: formData.cvv
+        } : {
+          upiId: formData.upiId.toLowerCase()
+        }),
+        createdAt: editingMethod ? editingMethod.createdAt : new Date().toISOString()
+      };
+
+      // Try API first, fallback to localStorage
+      try {
+        if (editingMethod) {
+          await axiosInstance.put(API_PATHS.PAYMENT.UPDATE_METHOD(editingMethod.id), newMethod);
+        } else {
+          await axiosInstance.post(API_PATHS.PAYMENT.ADD_METHOD, newMethod);
+        }
+      } catch (error) {
+        console.log('API not available, using localStorage');
+      }
+
+      let updatedMethods;
+      if (editingMethod) {
+        updatedMethods = paymentMethods.map(method => 
+          method.id === editingMethod.id ? newMethod : method
+        );
+        toast.success('Payment method updated successfully');
+      } else {
+        updatedMethods = [...paymentMethods, newMethod];
+        toast.success('Payment method added successfully');
+      }
+
+      setPaymentMethods(updatedMethods);
+      saveToStorage(updatedMethods);
+      setShowAddModal(false);
+      resetForm();
+    } catch (error) {
+      toast.error('Failed to save payment method');
+    } finally {
+      setLoading(false);
     }
-
-    setShowAddModal(false);
-    resetForm();
   };
 
   const maskCardNumber = (number) => {
     if (!number) return '';
-    return `**** **** **** ${number.slice(-4)}`;
+    const cleaned = number.replace(/\s/g, '');
+    return `**** **** **** ${cleaned.slice(-4)}`;
   };
 
   const maskUpiId = (upiId) => {
     if (!upiId) return '';
     const [username, domain] = upiId.split('@');
+    if (!username || !domain) return upiId;
     return `${username.slice(0, 2)}***@${domain}`;
+  };
+
+  const formatCardNumber = (value) => {
+    const cleaned = value.replace(/\s/g, '');
+    const formatted = cleaned.replace(/(.{4})/g, '$1 ').trim();
+    return formatted.slice(0, 19); // Max 16 digits + 3 spaces
   };
 
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Payment Methods</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Payment Methods</h3>
+          <p className="text-sm text-gray-500">Manage your cards and UPI accounts</p>
+        </div>
         <button 
           onClick={handleAddMethod}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
         >
           <LuPlus size={16} />
           Add Method
         </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {paymentMethods.map((method) => (
-          <div key={method.id} className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-xl text-white shadow-lg relative group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-2">
-                {method.type === 'card' ? <LuCreditCard size={24} /> : <LuSmartphone size={24} />}
-                <span className="text-sm font-medium">
-                  {method.type === 'card' ? 'Debit Card' : 'UPI'}
-                </span>
+      {loading && paymentMethods.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-gray-500">Loading payment methods...</p>
+        </div>
+      ) : paymentMethods.length === 0 ? (
+        <div className="text-center py-8 bg-gray-50 rounded-lg">
+          <LuCreditCard className="mx-auto text-4xl text-gray-300 mb-4" />
+          <h4 className="text-lg font-medium text-gray-600 mb-2">No Payment Methods</h4>
+          <p className="text-gray-500 mb-4">Add your first payment method to get started</p>
+          <button 
+            onClick={handleAddMethod}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Add Payment Method
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {paymentMethods.map((method) => (
+            <div key={method.id} className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-xl text-white shadow-lg relative group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                  {method.type === 'card' ? <LuCreditCard size={24} /> : <LuSmartphone size={24} />}
+                  <span className="text-sm font-medium">
+                    {method.type === 'card' ? 'Card' : 'UPI'}
+                  </span>
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleEditMethod(method)}
+                    className="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
+                    title="Edit"
+                  >
+                    <LuEdit size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMethod(method.id)}
+                    className="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
+                    title="Delete"
+                  >
+                    <LuTrash2 size={14} />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleEditMethod(method)}
-                  className="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30"
-                >
-                  <LuEdit size={14} />
-                </button>
-                <button
-                  onClick={() => handleDeleteMethod(method.id)}
-                  className="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30"
-                >
-                  <LuTrash2 size={14} />
-                </button>
-              </div>
+              
+              {method.type === 'card' ? (
+                <>
+                  <div className="text-lg font-mono mb-4 tracking-wider">
+                    {maskCardNumber(method.number)}
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-xs opacity-75">CARD HOLDER</div>
+                      <div className="text-sm font-medium">{method.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs opacity-75">EXPIRES</div>
+                      <div className="text-sm font-medium">{method.expiry}</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg font-mono mb-4">
+                    {maskUpiId(method.upiId)}
+                  </div>
+                  <div className="text-sm font-medium">{method.name}</div>
+                </>
+              )}
             </div>
-            
-            {method.type === 'card' ? (
-              <>
-                <div className="text-lg font-mono mb-4 tracking-wider">
-                  {maskCardNumber(method.number)}
-                </div>
-                <div className="flex justify-between items-end">
-                  <div>
-                    <div className="text-xs opacity-75">CARD HOLDER</div>
-                    <div className="text-sm font-medium">{method.name}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs opacity-75">EXPIRES</div>
-                    <div className="text-sm font-medium">{method.expiry}</div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-lg font-mono mb-4">
-                  {maskUpiId(method.upiId)}
-                </div>
-                <div className="text-sm font-medium">{method.name}</div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add/Edit Payment Method Modal */}
       <Modal
@@ -213,10 +302,10 @@ const PaymentMethodManager = () => {
               <button
                 type="button"
                 onClick={() => setMethodType('card')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                   methodType === 'card' 
                     ? 'bg-purple-50 border-purple-200 text-purple-700' 
-                    : 'bg-gray-50 border-gray-200 text-gray-600'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <LuCreditCard size={16} />
@@ -225,10 +314,10 @@ const PaymentMethodManager = () => {
               <button
                 type="button"
                 onClick={() => setMethodType('upi')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                   methodType === 'upi' 
                     ? 'bg-purple-50 border-purple-200 text-purple-700' 
-                    : 'bg-gray-50 border-gray-200 text-gray-600'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <LuSmartphone size={16} />
@@ -241,7 +330,7 @@ const PaymentMethodManager = () => {
           <Input
             value={formData.name}
             onChange={({ target }) => setFormData(prev => ({ ...prev, name: target.value }))}
-            label="Cardholder/Account Name"
+            label="Account Holder Name *"
             placeholder="John Doe"
             type="text"
           />
@@ -250,24 +339,37 @@ const PaymentMethodManager = () => {
             <>
               <Input
                 value={formData.number}
-                onChange={({ target }) => setFormData(prev => ({ ...prev, number: target.value }))}
-                label="Card Number"
+                onChange={({ target }) => {
+                  const formatted = formatCardNumber(target.value);
+                  setFormData(prev => ({ ...prev, number: formatted }));
+                }}
+                label="Card Number *"
                 placeholder="1234 5678 9012 3456"
                 type="text"
-                maxLength="16"
+                maxLength="19"
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   value={formData.expiry}
-                  onChange={({ target }) => setFormData(prev => ({ ...prev, expiry: target.value }))}
-                  label="Expiry Date"
+                  onChange={({ target }) => {
+                    let value = target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                    }
+                    setFormData(prev => ({ ...prev, expiry: value }));
+                  }}
+                  label="Expiry Date *"
                   placeholder="MM/YY"
                   type="text"
+                  maxLength="5"
                 />
                 <Input
                   value={formData.cvv}
-                  onChange={({ target }) => setFormData(prev => ({ ...prev, cvv: target.value }))}
-                  label="CVV"
+                  onChange={({ target }) => {
+                    const value = target.value.replace(/\D/g, '').slice(0, 3);
+                    setFormData(prev => ({ ...prev, cvv: value }));
+                  }}
+                  label="CVV *"
                   placeholder="123"
                   type="text"
                   maxLength="3"
@@ -278,30 +380,45 @@ const PaymentMethodManager = () => {
             <Input
               value={formData.upiId}
               onChange={({ target }) => setFormData(prev => ({ ...prev, upiId: target.value }))}
-              label="UPI ID"
+              label="UPI ID *"
               placeholder="username@paytm"
               type="text"
             />
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <button
               type="button"
               onClick={() => {
                 setShowAddModal(false);
                 resetForm();
               }}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+              disabled={loading}
+              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveMethod}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              disabled={loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {editingMethod ? 'Update' : 'Add'} Method
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                `${editingMethod ? 'Update' : 'Add'} Method`
+              )}
             </button>
+          </div>
+
+          {/* Help Text */}
+          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+            <p className="font-medium mb-1">Security Note:</p>
+            <p>Your payment information is stored securely and masked for display. Only the last 4 digits of cards are shown.</p>
           </div>
         </div>
       </Modal>

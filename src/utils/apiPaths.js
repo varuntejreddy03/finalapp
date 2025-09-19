@@ -34,5 +34,11 @@ export const API_PATHS = {
         COMMAND: "/api/v1/chatbot/command",
         GET_SUGGESTIONS: "/api/v1/chatbot/suggestions",
         SAVE_CONVERSATION: "/api/v1/chatbot/save-conversation",
+    },
+    PAYMENT: {
+        GET_METHODS: "/api/v1/payment/methods",
+        ADD_METHOD: "/api/v1/payment/methods",
+        UPDATE_METHOD: (id) => `/api/v1/payment/methods/${id}`,
+        DELETE_METHOD: (id) => `/api/v1/payment/methods/${id}`,
     }
 };

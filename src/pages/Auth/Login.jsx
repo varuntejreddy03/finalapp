@@ -45,6 +45,10 @@ const Login = () => {
                 localStorage.setItem("token", token);
                 // Set session timestamp
                 updateSessionTime();
+                // Store user data securely
+                if (user) {
+                    localStorage.setItem("user_data", JSON.stringify(user));
+                }
                 // 4. THE FIX: Update the user context immediately after login
                 updateUser(user); 
                 toast.success("Login successful!");

@@ -2,7 +2,7 @@ import axios from "axios";
 import { BASE_URL } from "./apiPaths";
 
 // Session management utilities
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SESSION_TIMEOUT = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds (increased session time)
 const SESSION_KEY = 'session_timestamp';
 
 const isSessionValid = () => {
@@ -23,6 +23,9 @@ const clearSession = () => {
     localStorage.removeItem('token');
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem('hasSeenSpendWiseBot');
+    // Clear any other app-specific data
+    localStorage.removeItem('user_data');
+    sessionStorage.clear();
 };
 
 const axiosInstance = axios.create({
