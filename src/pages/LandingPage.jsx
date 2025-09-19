@@ -13,7 +13,7 @@ export default function LandingPage() {
           </p>
           <p className="text-gray-500 mb-8">
             Track your income & expenses, view insights with interactive charts,
-            and make smarter financial decisions with Personal Finance Tracker.
+            and make smarter financial decision with Personal Finance Tracker.
           </p>
 
           {/* Buttons */}
